@@ -151,3 +151,11 @@ input
     background-color: gray;
     color: white;
 }
+
+#resolveBtn{
+  color: white;
+  background-color: #0069d9;
+  padding: 6px;
+  margin-right: 1vw;
+  border-radius: 7px;
+}

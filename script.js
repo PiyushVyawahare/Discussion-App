@@ -5,6 +5,13 @@ var questionTitleNode = document.getElementById("subject");
 var questionDescriptionNode = document.getElementById("question");
 var submitButtonNode = document.getElementById("submitBtn");
 var rightPaneNode = document.getElementById("rightContainer");
+var questionFormNode = document.getElementById("toggleDisplay");
+var respondQueNode = document.getElementById("respondQue");
+var resolveHolderNode = document.getElementById("resolveHolder");
+var commentHolderNode = document.getElementById("commentHolder");
+var commentatorNameNode = document.getElementById("pickName");
+var commentNode = document.getElementById("pickComment");
+var commentBtn = document.getElementById("commentBtn");
 
 submitButtonNode.addEventListener("click", onQuestionSubmit)
 
@@ -65,14 +72,19 @@ function displayQuestion(question){
         clearRightPane();
 
         addQuestionToRightPane(question);
+        
+        displayItems();
+
+
     }
 }
 
 function clearRightPane(){
-    rightPaneNode.innerHTML = "";
+    questionFormNode.style.display = "none";
 }
 
 function addQuestionToRightPane(question){
+    respondQueNode.innerHTML = "";
     var questionNode = document.createElement("div");
     questionNode.setAttribute("class", "questionDiv")
     var questionTitle = document.createElement("h3");
@@ -83,5 +95,10 @@ function addQuestionToRightPane(question){
 
     questionNode.appendChild(questionTitle);
     questionNode.appendChild(questionDescription);
-    rightPaneNode.appendChild(questionNode);
+    respondQueNode.appendChild(questionNode);
+}
+
+function displayItems(){
+    resolveHolderNode.style.display = "block";
+    commentHolderNode.style.display = "block";
 }
