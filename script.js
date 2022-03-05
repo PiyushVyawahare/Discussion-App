@@ -1,4 +1,5 @@
-var allQuestions = []
+var allQuestions = [];
+var commentArray = [];
 
 var leftPaneNode = document.getElementById("dataList");
 var questionTitleNode = document.getElementById("subject");
@@ -12,6 +13,9 @@ var commentHolderNode = document.getElementById("commentHolder");
 var commentatorNameNode = document.getElementById("pickName");
 var commentNode = document.getElementById("pickComment");
 var commentBtn = document.getElementById("commentBtn");
+var respondAnsNode = document.getElementById("respondAns");
+
+
 
 submitButtonNode.addEventListener("click", onQuestionSubmit)
 
@@ -75,7 +79,7 @@ function displayQuestion(question){
         
         displayItems();
 
-
+        commentBtn.addEventListener("click", onCommentAdded);
     }
 }
 
@@ -101,4 +105,36 @@ function addQuestionToRightPane(question){
 function displayItems(){
     resolveHolderNode.style.display = "block";
     commentHolderNode.style.display = "block";
+}
+
+function onCommentAdded(){
+
+    var comment = {
+        "name": "",
+        "description": ""
+    };
+
+    if(commentatorNameNode.value ===  "" || commentNode.value === ""){
+        alert("Fields are mandatory.")
+    }else{
+        comment.name = commentatorNameNode.value;
+        comment.description = commentNode.value;
+        commentArray.push(comment);
+        saveQuestionToLocalStorage(allQuestions);
+        addCommentToRespondAns(comment);
+        commentatorNameNode.value = "";
+        commentNode.value = "";
+    }
+}
+
+function addCommentToRespondAns(comment){
+
+    var commentatorName = document.createElement("h3");
+    var commentDescription = document.createElement("p");
+    
+    commentatorName.innerHTML = comment.name;
+    commentDescription.innerHTML = comment.description;
+    
+    respondAnsNode.appendChild(commentatorName);
+    respondAnsNode.appendChild(commentDescription);
 }
