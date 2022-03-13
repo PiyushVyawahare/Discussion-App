@@ -1,96 +1,57 @@
-var allQuestions = [];
-var commentArray = [];
-
-var leftPaneNode = document.getElementById("dataList");
 var questionTitleNode = document.getElementById("subject");
-var questionDescriptionNode = document.getElementById("question");
+var questionDescriptionNode= document.getElementById("question");
 var submitButtonNode = document.getElementById("submitBtn");
-var rightPaneNode = document.getElementById("rightContainer");
+var dataListNode = document.getElementById("dataList");
 var questionFormNode = document.getElementById("toggleDisplay");
 var respondQueNode = document.getElementById("respondQue");
 var resolveHolderNode = document.getElementById("resolveHolder");
-var commentHolderNode = document.getElementById("commentHolder");
-var commentatorNameNode = document.getElementById("pickName");
-var commentNode = document.getElementById("pickComment");
-var commentBtn = document.getElementById("commentBtn");
 var respondAnsNode = document.getElementById("respondAns");
+var commentHolderNode = document.getElementById("commentHolder");
+var commentNameNode = document.getElementById("pickName");
+var commentDescriptionNode = document.getElementById("pickComment");
+var commentButtonNode = document.getElementById("commentBtn");
 
-
-
-submitButtonNode.addEventListener("click", onQuestionSubmit)
 
 function onLoad(){
-    var questions = JSON.parse(localStorage.getItem("questions"));
-
-    if(questions!==null)
-    for(var i = 0; i < questions.length; i++){
-        allQuestions.push(questions[i]);
-        addQuestionToLeftPane(questions[i]);
-    }
+    var allQuestions = getAllQuestions();
+    allQuestions.forEach(addQuestionToLeftPane);
 }
 
 onLoad();
 
-function onQuestionSubmit(){
-    var question = {
-        "title": "",
-        "description": ""
-    };
+function onSubmitQuestion(){
 
-    if(questionTitleNode.value ===  "" || questionDescriptionNode.value === ""){
-        alert("Fields are mandatory.")
-    }else{
+    question = {
+        title: "",
+        description: "",
+        comments: []
+    }
+    
+    if(questionTitleNode.value !== "" && questionDescriptionNode.value !== ""){
         question.title = questionTitleNode.value;
         question.description = questionDescriptionNode.value;
-        allQuestions.push(question);
-        saveQuestionToLocalStorage(allQuestions);
-        addQuestionToLeftPane(question);
-        questionTitleNode.value = "";
-        questionDescriptionNode.value = "";
-    }
-}
 
-function saveQuestionToLocalStorage(allQuestions){
-    localStorage.setItem("questions", JSON.stringify(allQuestions));
+        addQuestionToLeftPane(question);
+        saveQuestionToLocalStorage(question);
+
+        clearQuestionForm();
+
+    } else {
+        alert("Fields are mandatory");
+    }
 }
 
 function addQuestionToLeftPane(question){
-    var questionDiv = document.createElement("div")
-    questionDiv.setAttribute("class", "questionDiv");
-    var questionTitle = document.createElement("h3");
-    var questionDescription = document.createElement("p");
+    var questionNode = createQuestionNode(question);
+    dataListNode.appendChild(questionNode);
 
-    questionTitle.innerHTML = question.title;
-    questionDescription.innerHTML = question.description;
-
-    questionDiv.appendChild(questionTitle);
-    questionDiv.appendChild(questionDescription);
-    leftPaneNode.appendChild(questionDiv);
-
-    questionDiv.addEventListener("click", displayQuestion(question));
+    questionNode.addEventListener("click", onQuestionClicked(question));
 }
 
-function displayQuestion(question){
-    return function(){
-
-        clearRightPane();
-
-        addQuestionToRightPane(question);
-        
-        displayItems();
-
-        commentBtn.addEventListener("click", onCommentAdded);
-    }
-}
-
-function clearRightPane(){
-    questionFormNode.style.display = "none";
-}
-
-function addQuestionToRightPane(question){
-    respondQueNode.innerHTML = "";
+function createQuestionNode(question){
     var questionNode = document.createElement("div");
-    questionNode.setAttribute("class", "questionDiv")
+    questionNode.setAttribute("id", "questionToLeft");
+
     var questionTitle = document.createElement("h3");
     var questionDescription = document.createElement("p");
 
@@ -99,42 +60,134 @@ function addQuestionToRightPane(question){
 
     questionNode.appendChild(questionTitle);
     questionNode.appendChild(questionDescription);
-    respondQueNode.appendChild(questionNode);
+    return questionNode;
 }
 
-function displayItems(){
-    resolveHolderNode.style.display = "block";
-    commentHolderNode.style.display = "block";
+function saveQuestionToLocalStorage(question){
+
+    var allQuestions = getAllQuestions();
+    allQuestions.push(question);
+    localStorage.setItem("questions", JSON.stringify(allQuestions));
 }
 
-function onCommentAdded(){
+function getAllQuestions(){
+    var allQuestions = localStorage.getItem("questions");
+    if(allQuestions){
+        allQuestions = JSON.parse(allQuestions);
+    }
+    else{
+        allQuestions = [];
+    }
+    return allQuestions;
+}
 
-    var comment = {
-        "name": "",
-        "description": ""
-    };
+function clearQuestionForm(){
+    questionTitleNode.value = "";
+    questionDescriptionNode.value = "";
+}
 
-    if(commentatorNameNode.value ===  "" || commentNode.value === ""){
-        alert("Fields are mandatory.")
-    }else{
-        comment.name = commentatorNameNode.value;
-        comment.description = commentNode.value;
-        commentArray.push(comment);
-        saveQuestionToLocalStorage(allQuestions);
-        addCommentToRespondAns(comment);
-        commentatorNameNode.value = "";
-        commentNode.value = "";
+function onQuestionClicked(question){
+    return function(){
+        hideQuestionPanel();
+        
+        clearRespondQueNode();
+        clearResponAnsNode();
+        showDiscussionDetails();
+
+        addQuestionToRightPane(question);
+        // console.log(question);
+        question.comments.forEach(function(comment)
+        {
+            addCommentsToRightPane(comment)
+        });
+
+        commentButtonNode.onclick = onCommentButtonClicked(question);
+   
     }
 }
 
-function addCommentToRespondAns(comment){
-
-    var commentatorName = document.createElement("h3");
-    var commentDescription = document.createElement("p");
-    
-    commentatorName.innerHTML = comment.name;
-    commentDescription.innerHTML = comment.description;
-    
-    respondAnsNode.appendChild(commentatorName);
-    respondAnsNode.appendChild(commentDescription);
+function clearRespondQueNode(){
+    respondQueNode.innerHTML = "";
 }
+
+function clearResponAnsNode(){
+    respondAnsNode.innerHTML = "";
+}
+
+function hideQuestionPanel(){
+    questionFormNode.style.display = "none";
+}
+
+function showDiscussionDetails(){
+    respondQueNode.style.display = "block";
+    resolveHolderNode.style.display = "block";
+    commentHolderNode.style.display = "block";
+    respondAnsNode.style.display = "block";
+
+}
+
+function addQuestionToRightPane(question){
+
+    var questionNode = createQuestionNode(question);
+    respondQueNode.appendChild(questionNode);
+}
+
+function onCommentButtonClicked(question){
+    return function(){
+
+        var comment = {
+            name: "",
+            description: ""
+        }
+
+        if(commentNameNode.value !== "" && commentDescriptionNode.value !== ""){
+            comment.name = commentNameNode.value;
+            comment.description = commentDescriptionNode.value;
+            question.comments.push(comment);
+            saveCommentToLocalStorage(question, comment);
+            addCommentsToRightPane(comment);
+
+            clearCommentForm();
+        } else {
+            alert("Fields are mandatory");
+        }
+
+        
+    }
+}
+
+function saveCommentToLocalStorage(question, comment){
+    var allQuestions = getAllQuestions();
+    for(var i = 0; i < allQuestions.length; i++){
+        if(allQuestions[i].title == question.title){
+            allQuestions[i].comments.push(comment);
+        }
+    }
+    localStorage.setItem("questions", JSON.stringify(allQuestions));
+}
+
+function addCommentsToRightPane(comment){
+    var commentNode = createCommentNode(comment);
+    respondAnsNode.appendChild(commentNode);
+}
+
+function createCommentNode(comment){
+    var commentNode = document.createElement("div");
+    commentNode.setAttribute("id", "questionToLeft");
+
+    var commentName = document.createElement("h3");
+    var commentDescription = document.createElement("p");
+
+    commentName.innerHTML = comment.name;
+    commentDescription.innerHTML = comment.description;
+
+    commentNode.appendChild(commentName);
+    commentNode.appendChild(commentDescription);
+    return commentNode;
+}
+
+function clearCommentForm(){
+    commentNameNode.value = "";
+    commentDescriptionNode.value = "";
+}
+submitButtonNode.addEventListener("click", onSubmitQuestion);

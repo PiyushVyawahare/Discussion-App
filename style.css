@@ -159,3 +159,7 @@ input
   margin-right: 1vw;
   border-radius: 7px;
 }
+
+#questionToLeft{
+  background-color: grey;
+}
