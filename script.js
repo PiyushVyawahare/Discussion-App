@@ -10,7 +10,53 @@ var commentHolderNode = document.getElementById("commentHolder");
 var commentNameNode = document.getElementById("pickName");
 var commentDescriptionNode = document.getElementById("pickComment");
 var commentButtonNode = document.getElementById("commentBtn");
+var searchQuestionNode = document.getElementById("questionSearch");
+var upvoteButtonNode = document.getElementById("upvote");
+var downvoteButtonNode = document.getElementById("downvote");
+var newQuestionFormNode = document.getElementById("newQuestionForm");
 
+function onNewQuestionFormClicked(){
+    hideDiscussionDetails();
+    viewQuestionPanel();
+}
+
+function hideDiscussionDetails(){
+    respondQueNode.style.display = "none";
+    resolveHolderNode.style.display = "none";
+    commentHolderNode.style.display = "none";
+    respondAnsNode.style.display = "none";
+
+}
+
+function viewQuestionPanel(){
+    questionFormNode.style.display = "block";
+}
+
+function searchQuestion(event){
+    var allQuestions = getAllQuestions();
+    clearAllQuestions();
+    tempArray = [];
+    if(event.target.value){
+        for(var i = 0; i < allQuestions.length; i++){
+            if(allQuestions[i].title.includes(event.target.value)){
+                tempArray.push(allQuestions[i]);
+            }
+        }
+        if(tempArray.length){
+            tempArray.forEach(addQuestionToLeftPane);
+        }
+        else{
+            dataListNode.innerHTML = "NO MATCH FOUND";
+        }
+    }
+    else{
+        allQuestions.forEach(addQuestionToLeftPane);
+    }
+}
+
+function clearAllQuestions(){
+    dataListNode.innerHTML = "";
+}
 
 function onLoad(){
     var allQuestions = getAllQuestions();
@@ -24,7 +70,9 @@ function onSubmitQuestion(){
     question = {
         title: "",
         description: "",
-        comments: []
+        comments: [],
+        upvotes: 0,
+        downvotes: 0
     }
     
     if(questionTitleNode.value !== "" && questionDescriptionNode.value !== ""){
@@ -50,16 +98,25 @@ function addQuestionToLeftPane(question){
 
 function createQuestionNode(question){
     var questionNode = document.createElement("div");
-    questionNode.setAttribute("id", "questionToLeft");
+    questionNode.setAttribute("class", question.title);
+    questionNode.setAttribute("id", "questionToLeft")
 
     var questionTitle = document.createElement("h3");
     var questionDescription = document.createElement("p");
+    var questionUpvotes = document.createElement("p");
+    var questionDownvotes = document.createElement("p");
+
 
     questionTitle.innerHTML = question.title;
     questionDescription.innerHTML = question.description;
+    questionUpvotes.innerHTML = "Upvotes: "+question.upvotes;
+    questionDownvotes.innerHTML = "Downvotes: "+question.downvotes;
 
     questionNode.appendChild(questionTitle);
     questionNode.appendChild(questionDescription);
+    questionNode.appendChild(questionUpvotes);
+    questionNode.appendChild(questionDownvotes);
+
     return questionNode;
 }
 
@@ -102,8 +159,14 @@ function onQuestionClicked(question){
         });
 
         commentButtonNode.onclick = onCommentButtonClicked(question);
-   
+        upvoteButtonNode.onclick = onUpvoteButtonClicked(question);
+        downvoteButtonNode.onclick = onDownvoteButtonClicked(question);
     }
+}
+
+
+function hideQuestionPanel(){
+    questionFormNode.style.display = "none";
 }
 
 function clearRespondQueNode(){
@@ -114,9 +177,7 @@ function clearResponAnsNode(){
     respondAnsNode.innerHTML = "";
 }
 
-function hideQuestionPanel(){
-    questionFormNode.style.display = "none";
-}
+
 
 function showDiscussionDetails(){
     respondQueNode.style.display = "block";
@@ -190,4 +251,46 @@ function clearCommentForm(){
     commentNameNode.value = "";
     commentDescriptionNode.value = "";
 }
+
+
+function onUpvoteButtonClicked(question){
+    return function(){
+        question.upvotes++;
+        updateQuestionInLocalStorage(question);
+        updateQuestionUI(question);
+    }
+    
+}
+
+function onDownvoteButtonClicked(question){
+    return function(){
+        question.downvotes++;
+        updateQuestionInLocalStorage(question);
+        updateQuestionUI(question);
+    }
+    
+}
+
+function updateQuestionInLocalStorage(question){
+    var allQuestions = getAllQuestions();
+    for(var i = 0; i < allQuestions.length; i++){
+        if(allQuestions[i].title == question.title){
+            allQuestions[i].upvotes = question.upvotes;
+            allQuestions[i].downvotes = question.downvotes;
+        }
+    }
+    localStorage.setItem("questions", JSON.stringify(allQuestions));
+}
+
+function updateQuestionUI(question){
+    var questionContainerNode = document.getElementsByClassName(question.title);
+
+    questionContainerNode[0].childNodes[2].innerHTML = "Upvotes: "+question.upvotes;
+    questionContainerNode[1].childNodes[2].innerHTML = "Upvotes: "+question.upvotes;
+    questionContainerNode[0].childNodes[3].innerHTML = "Downvotes: "+question.downvotes;
+    questionContainerNode[1].childNodes[3].innerHTML = "Downvotes: "+question.downvotes;
+}
+
 submitButtonNode.addEventListener("click", onSubmitQuestion);
+searchQuestionNode.addEventListener("keyup", searchQuestion);
+newQuestionFormNode.addEventListener("click", onNewQuestionFormClicked)
