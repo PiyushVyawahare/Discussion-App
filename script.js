@@ -14,6 +14,9 @@ var searchQuestionNode = document.getElementById("questionSearch");
 var upvoteButtonNode = document.getElementById("upvote");
 var downvoteButtonNode = document.getElementById("downvote");
 var newQuestionFormNode = document.getElementById("newQuestionForm");
+var resolveQuestionButtonNode = document.getElementById("resolveQuestion");
+
+
 
 function onNewQuestionFormClicked(){
     hideDiscussionDetails();
@@ -129,13 +132,14 @@ function saveQuestionToLocalStorage(question){
 
 function getAllQuestions(){
     var allQuestions = localStorage.getItem("questions");
+    var allQuestions1;
     if(allQuestions){
-        allQuestions = JSON.parse(allQuestions);
+        allQuestions1 = JSON.parse(allQuestions);
     }
     else{
-        allQuestions = [];
+        allQuestions1 = [];
     }
-    return allQuestions;
+    return allQuestions1;
 }
 
 function clearQuestionForm(){
@@ -161,6 +165,7 @@ function onQuestionClicked(question){
         commentButtonNode.onclick = onCommentButtonClicked(question);
         upvoteButtonNode.onclick = onUpvoteButtonClicked(question);
         downvoteButtonNode.onclick = onDownvoteButtonClicked(question);
+        resolveQuestionButtonNode.onclick = onResolveQuestionclicked(question);
     }
 }
 
@@ -289,6 +294,24 @@ function updateQuestionUI(question){
     questionContainerNode[1].childNodes[2].innerHTML = "Upvotes: "+question.upvotes;
     questionContainerNode[0].childNodes[3].innerHTML = "Downvotes: "+question.downvotes;
     questionContainerNode[1].childNodes[3].innerHTML = "Downvotes: "+question.downvotes;
+}
+
+function onResolveQuestionclicked(question){
+    return function(){
+        var allQuestions = getAllQuestions();
+        var idx;
+        for(var i = 0; i < allQuestions.length; i++){
+            if(allQuestions[i].title === question.title){
+                idx = i;
+            }
+        }
+        allQuestions.splice(idx, 1);
+        localStorage.setItem("questions", JSON.stringify(allQuestions));
+        clearAllQuestions();
+        allQuestions.forEach(addQuestionToLeftPane);
+        hideDiscussionDetails();
+        viewQuestionPanel();
+    }
 }
 
 submitButtonNode.addEventListener("click", onSubmitQuestion);
