@@ -63,6 +63,13 @@ function clearAllQuestions(){
 
 function onLoad(){
     var allQuestions = getAllQuestions();
+
+    allQuestions = allQuestions.sort(function(currentQ, nextQ){
+        if(currentQ.isFav)
+            return -1;
+        return 1;
+    })
+
     allQuestions.forEach(addQuestionToLeftPane);
 }
 
@@ -75,7 +82,9 @@ function onSubmitQuestion(){
         description: "",
         comments: [],
         upvotes: 0,
-        downvotes: 0
+        downvotes: 0,
+        createdAt: Date.now(),
+        isFav: false
     }
     
     if(questionTitleNode.value !== "" && questionDescriptionNode.value !== ""){
@@ -108,19 +117,44 @@ function createQuestionNode(question){
     var questionDescription = document.createElement("p");
     var questionUpvotes = document.createElement("p");
     var questionDownvotes = document.createElement("p");
-
+    var questionCreatedAtDate = document.createElement("p");
+    var questionCreatedBeforeTime = document.createElement("p");
+    var isFavButton = document.createElement("button");
 
     questionTitle.innerHTML = question.title;
     questionDescription.innerHTML = question.description;
     questionUpvotes.innerHTML = "Upvotes: "+question.upvotes;
     questionDownvotes.innerHTML = "Downvotes: "+question.downvotes;
+    questionCreatedAtDate.innerHTML = new Date(question.createdAt).toLocaleString();
+    questionCreatedBeforeTime.innerHTML = "Created "+updateAndConvertTime(questionCreatedBeforeTime)(question.createdAt)+" ago";
+    if(question.isFav)
+        isFavButton.innerHTML = "Remove Fav";
+    else 
+        isFavButton.innerHTML = "Add Fav";
 
     questionNode.appendChild(questionTitle);
     questionNode.appendChild(questionDescription);
     questionNode.appendChild(questionUpvotes);
     questionNode.appendChild(questionDownvotes);
+    questionNode.appendChild(questionCreatedAtDate);
+    questionNode.appendChild(questionCreatedBeforeTime);
+    questionNode.appendChild(isFavButton);
+
+    isFavButton.addEventListener("click", toggleIsFav(question));
 
     return questionNode;
+}
+
+function toggleIsFav(question){
+    return function(event){
+        event.stopPropagation();
+        question.isFav = !question.isFav;
+        updateQuestionInLocalStorage(question);
+        if(question.isFav)
+            event.target.innerHTML = "Remove Fav";
+        else 
+            event.target.innerHTML = "Add Fav";
+    }
 }
 
 function saveQuestionToLocalStorage(question){
@@ -194,10 +228,45 @@ function showDiscussionDetails(){
 
 function addQuestionToRightPane(question){
 
-    var questionNode = createQuestionNode(question);
+    var questionNode = createQuestionNodeForRightPane(question);
     respondQueNode.appendChild(questionNode);
 }
+function createQuestionNodeForRightPane(question){
+    var questionNode = document.createElement("div");
+    questionNode.setAttribute("class", question.title);
+    questionNode.setAttribute("id", "questionToLeft")
 
+    var questionTitle = document.createElement("h3");
+    var questionDescription = document.createElement("p");
+    var questionUpvotes = document.createElement("p");
+    var questionDownvotes = document.createElement("p");
+    var questionCreatedAtDate = document.createElement("p");
+    var questionCreatedBeforeTime = document.createElement("p");
+    // var isFavButton = document.createElement("button");
+
+    questionTitle.innerHTML = question.title;
+    questionDescription.innerHTML = question.description;
+    questionUpvotes.innerHTML = "Upvotes: "+question.upvotes;
+    questionDownvotes.innerHTML = "Downvotes: "+question.downvotes;
+    questionCreatedAtDate.innerHTML = new Date(question.createdAt).toLocaleString();
+    questionCreatedBeforeTime.innerHTML = "Created "+updateAndConvertTime(questionCreatedBeforeTime)(question.createdAt)+" ago";
+    // if(question.isFav)
+    //     isFavButton.innerHTML = "Remove Fav";
+    // else 
+    //     isFavButton.innerHTML = "Add Fav";
+
+    questionNode.appendChild(questionTitle);
+    questionNode.appendChild(questionDescription);
+    questionNode.appendChild(questionUpvotes);
+    questionNode.appendChild(questionDownvotes);
+    questionNode.appendChild(questionCreatedAtDate);
+    questionNode.appendChild(questionCreatedBeforeTime);
+    // questionNode.appendChild(isFavButton);
+
+    //isFavButton.addEventListener("click", toggleIsFav(question));
+
+    return questionNode;
+}
 function onCommentButtonClicked(question){
     return function(){
 
@@ -282,6 +351,7 @@ function updateQuestionInLocalStorage(question){
         if(allQuestions[i].title == question.title){
             allQuestions[i].upvotes = question.upvotes;
             allQuestions[i].downvotes = question.downvotes;
+            allQuestions[i].isFav = question.isFav;
         }
     }
     localStorage.setItem("questions", JSON.stringify(allQuestions));
@@ -312,6 +382,31 @@ function onResolveQuestionclicked(question){
         hideDiscussionDetails();
         viewQuestionPanel();
     }
+}
+
+function updateAndConvertTime(element){
+    return function(time){
+        setInterval(function(){
+            element.innerHTML = "Created "+convertDateToCreatedAtTime(time)+" ago";
+        }, 1000)
+        return convertDateToCreatedAtTime(time);
+    }
+}
+function convertDateToCreatedAtTime(date){
+    var currentTime = Date.now();
+    var timeLapsed = currentTime - new Date(date).getTime();
+
+    timeLapsed = parseInt(timeLapsed/1000);
+    var hour = parseInt(timeLapsed/3600);
+    var min = parseInt((timeLapsed/60)%60);
+    var sec = parseInt(timeLapsed%60);
+
+    if(hour !== 0)
+        return hour+" hrs "+min+" mins";
+    if(min !== 0)
+        return min+" mins "+sec+" seconds";
+    else
+        return sec+" seconds";
 }
 
 submitButtonNode.addEventListener("click", onSubmitQuestion);
